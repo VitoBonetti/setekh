@@ -1,7 +1,7 @@
 import flet as ft
 
 
-class DashboardView:
+class UnauthorizedView:
     def __init__(self, state):
         self.state = state
 
@@ -13,7 +13,6 @@ class DashboardView:
             content=ft.Column(
                 [
                     ft.Text(self.state.current_view_title),
-                    ft.Text(self.state.current_role),
                 ],
                 scroll=ft.ScrollMode.AUTO,
                 expand=True,

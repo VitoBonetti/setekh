@@ -7,12 +7,14 @@ from helpers.check_path import check_path
 from views.template import Template
 from views.configuration_db import ConfigurationDBView
 from views.configuration_master import MasterUserRegistration
+from views.configuration_first_login import ConfigurationFirstLoginView
 from views.assets import AssetsView
 from views.blocks import BlocksView
 from views.dashboard import DashboardView
 from views.assessments import AssessmentsView
 from views.vulnerabilities import VulnerabilitiesView
 from views.login import LoginView
+from views.unauthorized import UnauthorizedView
 
 
 
@@ -30,6 +32,10 @@ def main(page: ft.Page):
     state.page = page
     page.state = state
 
+    # get cookie if any
+    state.session_id = state.page.client_storage.get("session_id")
+    state.session_user_uuid = state.page.client_storage.get("user_uuid")
+
     # one inner‐view instance per route
     state.view_instances = {}
     # one rendered inner‐view control per route
@@ -44,36 +50,20 @@ def main(page: ft.Page):
 
     # map of routes → (title, view class)
     route_map = {
-        "/":  ("Configuration", ConfigurationDBView),
-        "/1": ("Dashboard", DashboardView),
-        "/2": ("Blocks", BlocksView),
-        "/3": ("Assets", AssetsView),
-        "/4": ("Assessments", AssessmentsView),
-        "/5": ("Vulnerability", VulnerabilitiesView),
-        "/100": ("Registration Master User", MasterUserRegistration),
-        "/200": ("Login", LoginView),
+        "/": ("Dashboard", DashboardView),
+        "/1": ("Blocks", BlocksView),
+        "/2": ("Assets", AssetsView),
+        "/3": ("Assessments", AssessmentsView),
+        "/4": ("Vulnerability", VulnerabilitiesView),
+        "/5": ("Settings", ConfigurationFirstLoginView),
+        "/100": ("Configuration", ConfigurationDBView),
+        "/200": ("Registration Master User", MasterUserRegistration),
+        "/300": ("Login", LoginView),
+        "/401": ("Unauthorized", UnauthorizedView),
     }
 
     def route_change(e):
-        # figure out route key
-        if not check_path(config_file_path):
-            # no config.json → always show config view
-            route = "/"
-        else:
-            with open(config_file_path, "r") as f:
-                conf_data = json.load(f)
-                if conf_data["step"] == "1":
-                    page.go("/100")
-                elif conf_data["step"] == "Done":
-                    if is_session_valid(state):
-                        # config exists
-                        if page.route == "/":
-                            # user is on "/" → immediately switch to dashboard
-                            page.go("/1")
-                            return
-                    else:
-                        page.go("/200")
-            route = page.route
+        route = page.route  # user-selected route
 
         title, ViewCls = route_map.get(route, ("Dashboard", DashboardView))
         state.current_view_title = title
@@ -88,7 +78,7 @@ def main(page: ft.Page):
 
         # 2) display logic
         page.views.clear()
-        if route in ["/", "/100", "/200"]:  # Skip template is if not logged user
+        if route in ["/100", "/200", "/300", "/401"]:  # Skip template is if not logged user
             page.views.append(
                 ft.View(
                     route=route,
@@ -97,7 +87,7 @@ def main(page: ft.Page):
             )
         else:
             # 3) update our single TemplatePage
-            tpl.selected_index = (int(route[1:]) - 1) if len(route) > 1 else 0
+            tpl.selected_index = int(route[1:]) if len(route) > 1 else 0
             tpl.content_view = content
             page.views.append(
                 ft.View(
@@ -108,7 +98,18 @@ def main(page: ft.Page):
         page.update()
 
     page.on_route_change = route_change
-    page.go(page.route or ("/1" if check_path(config_file_path) else "/"))
+
+    if not check_path(config_file_path):
+        page.go("/100")
+    else:
+        with open(config_file_path, "r") as f:
+            conf_data = json.load(f)
+            if conf_data["step"] == "1":
+                page.go("/200")
+            elif is_session_valid(state):
+                page.go("/")
+            else:
+                page.go("/300")
 
 
 if __name__ == "__main__":

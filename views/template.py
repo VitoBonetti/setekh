@@ -23,19 +23,42 @@ class Template:
 
     def render(self):
         def on_nav_change(e):
-            self.page.go(f"/{e.control.selected_index + 1}")
+            self.page.go(f"/{e.control.selected_index}")
+
+        destinations = [
+            ft.NavigationRailDestination(
+                icon=ft.Icon(name=ft.Icons.DASHBOARD, tooltip="Dashboard", color=ft.Colors.BLUE),
+                selected_icon=ft.Icon(name=ft.Icons.DASHBOARD_OUTLINED, tooltip="Dashboard", color=ft.Colors.GREEN),
+                label="Dashboard"),
+            ft.NavigationRailDestination(
+                icon=ft.Icon(name=ft.Icons.ACCOUNT_TREE, tooltip="Blocks", color=ft.Colors.BLUE),
+                selected_icon=ft.Icon(name=ft.Icons.ACCOUNT_TREE_OUTLINED, tooltip="Blocks", color=ft.Colors.GREEN),
+                label="Blocks"),
+            ft.NavigationRailDestination(icon=ft.Icon(name=ft.Icons.DIAMOND, tooltip="Assets", color=ft.Colors.BLUE),
+                                         selected_icon=ft.Icon(name=ft.Icons.DIAMOND_OUTLINED, tooltip="Assets",
+                                                               color=ft.Colors.GREEN), label="Assets"),
+            ft.NavigationRailDestination(
+                icon=ft.Icon(name=ft.Icons.ASSIGNMENT, tooltip="Assessments", color=ft.Colors.BLUE),
+                selected_icon=ft.Icon(name=ft.Icons.ASSIGNMENT_OUTLINED, tooltip="Assessments", color=ft.Colors.GREEN),
+                label="Assessments"),
+            ft.NavigationRailDestination(
+                icon=ft.Icon(name=ft.Icons.BUG_REPORT, tooltip="Vulnerabilities", color=ft.Colors.BLUE),
+                selected_icon=ft.Icon(name=ft.Icons.BUG_REPORT_OUTLINED, tooltip="Vulnerabilities",
+                                      color=ft.Colors.GREEN), label="Vulnerabilities"),
+        ]
+
+        if self.state.current_role == "Master":
+            destinations.extend([
+                ft.NavigationRailDestination(icon=ft.Icon(name=ft.Icons.SETTINGS, tooltip="Settings", color=ft.Colors.BLUE),
+                                             selected_icon=ft.Icon(name=ft.Icons.SETTINGS_OUTLINED, tooltip="Settings",
+                                                                   color=ft.Colors.GREEN), label="Settings"),
+            ])
 
         # Navigation Rail
         nav_rail = ft.NavigationRail(
             selected_index=self.selected_index,
             label_type=ft.NavigationRailLabelType.NONE,
-            destinations=[
-                ft.NavigationRailDestination(icon=ft.Icon(name=ft.Icons.DASHBOARD, tooltip="Dashboard", color=ft.Colors.BLUE), selected_icon=ft.Icon(name=ft.Icons.DASHBOARD_OUTLINED, tooltip="Dashboard", color=ft.Colors.GREEN), label="Dashboard"),
-                ft.NavigationRailDestination(icon=ft.Icon(name=ft.Icons.ACCOUNT_TREE, tooltip="Blocks", color=ft.Colors.BLUE), selected_icon=ft.Icon(name=ft.Icons.ACCOUNT_TREE_OUTLINED, tooltip="Blocks", color=ft.Colors.GREEN), label="Blocks"),
-                ft.NavigationRailDestination(icon=ft.Icon(name=ft.Icons.DIAMOND, tooltip="Assets", color=ft.Colors.BLUE), selected_icon=ft.Icon(name=ft.Icons.DIAMOND_OUTLINED, tooltip="Assets", color=ft.Colors.GREEN), label="Assets"),
-                ft.NavigationRailDestination(icon=ft.Icon(name=ft.Icons.ASSIGNMENT, tooltip="Assessments", color=ft.Colors.BLUE), selected_icon=ft.Icon(name=ft.Icons.ASSIGNMENT_OUTLINED, tooltip="Assessments", color=ft.Colors.GREEN), label="Assessments"),
-                ft.NavigationRailDestination(icon=ft.Icon(name=ft.Icons.BUG_REPORT, tooltip="Vulnerabilities", color=ft.Colors.BLUE), selected_icon=ft.Icon(name=ft.Icons.BUG_REPORT_OUTLINED, tooltip="Vulnerabilities", color=ft.Colors.GREEN), label="Vulnerabilities"),
-            ],
+            destinations=destinations,
             on_change=on_nav_change,
         )
 

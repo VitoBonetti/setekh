@@ -8,6 +8,7 @@ from utils.handle_db_connection import connect_to_db
 from helpers.check_email import check_email
 from helpers.hash_psw import hash_password, compare_password
 from handlers.configurations.qr_code_gen import get_2fa_qr_uri
+from queries.queries import CREATE_MASTER
 
 
 def register_master(email, password1, password2, state, e):
@@ -38,11 +39,7 @@ def register_master(email, password1, password2, state, e):
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
-            INSERT INTO users (uuid, email, password, is_active, is_confirmed, 2fa_active, 2fa_secret)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (user_uuid, email, hashed_password, False, True, True, twofa_secret))
-
+        cursor.execute(CREATE_MASTER, (user_uuid, email, hashed_password, True, False, True, True, twofa_secret))
         conn.commit()
         qr_code_image = get_2fa_qr_uri(email, twofa_secret)
         state.qr_code_image_control.src = f"data:image/png;base64,{qr_code_image}"
@@ -131,4 +128,4 @@ def verify_code(state, e):
         cursor.close()
         conn.close()
 
-    state.page.go("/1")
+    state.page.go("/")

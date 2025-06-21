@@ -47,7 +47,7 @@ class MasterUserRegistration:
             visible=False,
             style=ft.ButtonStyle(
                 bgcolor={
-                    ft.ControlState.HOVERED: ft.Colors.RED_50,
+                    ft.ControlState.HOVERED: ft.Colors.BLUE_50,
                     ft.ControlState.DEFAULT: ft.Colors.SURFACE
                 }
             ),

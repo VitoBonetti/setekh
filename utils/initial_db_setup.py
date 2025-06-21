@@ -1,9 +1,9 @@
-from queries.initial_setup import queries
+from queries.queries import INITIAL_QUERIES
 
 
 def execute_query(conn):
     cursor = conn.cursor()
-    for query in queries:
+    for query in INITIAL_QUERIES:
         try:
             cursor.execute(query)
             conn.commit()

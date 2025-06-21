@@ -1,5 +1,5 @@
 import json
-from asyncio import sleep
+from time import sleep
 import pymysql
 import os
 from utils.initial_db_setup import execute_query
@@ -40,7 +40,7 @@ def db_config(state, host, port, user, password, db, step, e):
             state.conf_info_text.value = "Database set up successfully."
             state.conf_info_text.update()
             sleep(1)
-            state.page.go("/100")
+            state.page.go("/200")
         else:
             print("Database connection test failed.")
             state.conf_info_text.value = "Connection failed."
