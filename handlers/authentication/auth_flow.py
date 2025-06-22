@@ -11,7 +11,7 @@ SESSION_DURATION_MINUTES = 60
 
 def login(email, password, state, e):
     try:
-        conn = connect_to_db()
+        conn = connect_to_db(state)
         cursor = conn.cursor()
         cursor.execute("SELECT uuid, password, is_active, is_master, 2fa_secret FROM users WHERE email = %s", (email,))
         user_profile = cursor.fetchone()
@@ -84,7 +84,7 @@ def create_session(state):
     state.session_user_uuid = state.temp_user_id
     expires_at = datetime.now() + timedelta(minutes=SESSION_DURATION_MINUTES)
     try:
-        conn = connect_to_db()
+        conn = connect_to_db(state)
         cursor = conn.cursor()
         cursor.execute(UPDATE_SESSION, (session_id, expires_at, state.temp_user_id))
         conn.commit()
@@ -101,7 +101,7 @@ def is_session_valid(state):
     if not state.session_id or not state.session_user_uuid:
         return False
     try:
-        conn = connect_to_db()
+        conn = connect_to_db(state)
         cursor = conn.cursor()
         cursor.execute(CHECK_SESSION, (state.session_user_uuid, state.session_id))
         row = cursor.fetchone()
@@ -127,7 +127,7 @@ def is_session_valid(state):
 def logout(state, e):
     print("logout called")
     try:
-        conn = connect_to_db()
+        conn = connect_to_db(state)
         cursor = conn.cursor()
         cursor.execute(DELETE_SESSION, (state.session_user_uuid,))
         conn.commit()

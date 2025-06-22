@@ -8,7 +8,7 @@ from utils.handle_db_connection import connect_to_db
 from helpers.check_email import check_email
 from helpers.hash_psw import hash_password, compare_password
 from handlers.configurations.qr_code_gen import get_2fa_qr_uri
-from queries.queries import CREATE_MASTER
+from queries.queries import INITIALIZATION_MASTER, LAST_2FA, USER_IS_ACTIVE, INITIAL_CONFIG_TABLE
 
 
 def register_master(email, password1, password2, state, e):
@@ -35,11 +35,11 @@ def register_master(email, password1, password2, state, e):
     twofa_secret = pyotp.random_base32()
     hashed_password = hash_password(password1)
 
-    conn = connect_to_db()
+    conn = connect_to_db(state)
     cursor = conn.cursor()
 
     try:
-        cursor.execute(CREATE_MASTER, (user_uuid, email, hashed_password, True, False, True, True, twofa_secret))
+        cursor.execute(INITIALIZATION_MASTER, (user_uuid, email, hashed_password, True, False, True, True, twofa_secret))
         conn.commit()
         qr_code_image = get_2fa_qr_uri(email, twofa_secret)
         state.qr_code_image_control.src = f"data:image/png;base64,{qr_code_image}"
@@ -73,11 +73,11 @@ def verify_code(state, e):
         return
 
     try:
-        conn = connect_to_db()
+        conn = connect_to_db(state)
         cursor = conn.cursor()
 
         # Fetch latest user's 2FA secret (assuming you're registering just 1 user here)
-        cursor.execute("SELECT uuid, 2fa_secret FROM users ORDER BY created_at DESC LIMIT 1")
+        cursor.execute(LAST_2FA)
         user = cursor.fetchone()
         if not user:
             state.step2_info_text.value = "No user found for verification."
@@ -88,7 +88,9 @@ def verify_code(state, e):
         totp = pyotp.TOTP(secret)
         if totp.verify(code):
             # Enable account
-            cursor.execute("UPDATE users SET is_active = TRUE WHERE uuid = %s", (user_id,))
+            cursor.execute(USER_IS_ACTIVE, (user_id,))
+            config_uuid = uuid.uuid4()
+            cursor.execute(INITIAL_CONFIG_TABLE, (config_uuid,))
             conn.commit()
 
             state.step2_info_text.value = "2FA code verified. User activated!"
@@ -108,7 +110,7 @@ def verify_code(state, e):
                 print(f"Error: Could not decode JSON from '{config_file_path}'. Check file format.")
                 return
 
-            config_data["step"] = "Done"
+            config_data["step"] = "Step3"
             try:
                 with open(config_file_path, 'w') as f:
                     json.dump(config_data, f, indent=4)
@@ -121,6 +123,7 @@ def verify_code(state, e):
         state.page.update()
 
     except Exception as ex:
+        print(ex)
         state.step2_info_text.value = f"Error verifying code: {ex}"
         state.page.update()
         return
@@ -128,4 +131,4 @@ def verify_code(state, e):
         cursor.close()
         conn.close()
 
-    state.page.go("/")
+    state.page.go("/103")

@@ -3,6 +3,7 @@ from time import sleep
 import pymysql
 import os
 from utils.initial_db_setup import execute_query
+from handlers.configurations.sm_handler import sm_handler_connection
 
 
 def db_config(state, host, port, user, password, db, step, e):
@@ -13,23 +14,38 @@ def db_config(state, host, port, user, password, db, step, e):
 
     state.conf_info_progress.visible = True
     state.conf_info_progress.update()
+
     port = int(port)
-    print(port)
+
+
     try:
         print("Try to connect")
         conn = pymysql.connect(host=host, port=port, user=user, password=password, database=db)
         if conn:
+            client, secret_path = sm_handler_connection(state)
+            client.secrets.kv.v2.create_or_update_secret(
+                path=f"{secret_path}/database",
+                secret={
+                    "host": host,
+                    "port": port,
+                    "user": user,
+                    "password": password,
+                    "db": db,
+                },
+                mount_point="secret"
+            )
             print("Database connection tested")
             state.conf_info_text.value = "Connection successful."
             state.conf_info_text.update()
 
             config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'config.json'))
+            with open(config_file_path) as config_file:
+                json_config = json.load(config_file)
 
-            confing_json = {"host": host, "port": port, "user": user, "password": password, "db": db, "step": step}
-            print(confing_json)
+            json_config["step"] = "Step2"
 
             with open(config_file_path, "w") as f:
-                json.dump(confing_json, f, indent=4)
+                json.dump(json_config, f, indent=4)
             sleep(1)
 
             state.conf_info_text.value = "Connection successful. Setting up database."
@@ -40,7 +56,7 @@ def db_config(state, host, port, user, password, db, step, e):
             state.conf_info_text.value = "Database set up successfully."
             state.conf_info_text.update()
             sleep(1)
-            state.page.go("/200")
+            state.page.go("/102")
         else:
             print("Database connection test failed.")
             state.conf_info_text.value = "Connection failed."

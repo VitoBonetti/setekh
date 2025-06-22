@@ -11,7 +11,11 @@ CREATE_BLOCKS_TABLE = ("CREATE TABLE blocks (uuid CHAR(36) PRIMARY KEY, block VA
                        "is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
                        "created_by CHAR(36) NOT NULL, FOREIGN KEY (created_by) REFERENCES users(uuid)) ENGINE=InnoDB")
 
-INITIAL_QUERIES = [CREATE_ROLES_TABLE, CREATE_USER_TABLE, CREATE_BLOCKS_TABLE]
+CREATE_CONFIG_TABLE = ("CREATE TABLE initialconfig (uuid CHAR(36) PRIMARY KEY, secret BOOLEAN DEFAULT FALSE, "
+                       "initialdb BOOLEAN DEFAULT FALSE, email BOOLEAN DEFAULT FALSE, masteruser BOOLEAN DEFAULT FALSE, "
+                       "deploydb BOOLEAN DEFAULT FALSE) ENGINE=InnoDB ")
+
+INITIAL_QUERIES = [CREATE_ROLES_TABLE, CREATE_USER_TABLE, CREATE_BLOCKS_TABLE, CREATE_CONFIG_TABLE]
 
 # === SESSION ===
 
@@ -21,5 +25,16 @@ DELETE_SESSION = "UPDATE users SET session_id = NULL, session_expires_at = NULL 
 
 # === MASTER USER ==
 
-CREATE_MASTER = ("INSERT INTO users (uuid, email, password, is_confirmed, is_active, is_master, 2fa_active, 2fa_secret) "
+INITIALIZATION_MASTER = ("INSERT INTO users (uuid, email, password, is_confirmed, is_active, is_master, 2fa_active, 2fa_secret) "
                  "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
+
+# == CONFIG TABLE ==
+
+INITIAL_CONFIG_TABLE = ("INSERT INTO initialconfig (uuid, secret, initialdb, masteruser) "
+                 "VALUES (%s, TRUE, TRUE, TRUE)")
+SELECT_CONFIG_UUID = "SELECT uuid FROM initialconfig LIMIT 1"
+UPDATE_INITIAL_CONFIG = "UPDATE initialconfig SET email = TRUE WHERE uuid = %s"
+
+# == USERS ==
+LAST_2FA = "SELECT uuid, 2fa_secret FROM users ORDER BY created_at DESC LIMIT 1"
+USER_IS_ACTIVE = "UPDATE users SET is_active = TRUE WHERE uuid = %s"

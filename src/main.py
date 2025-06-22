@@ -5,9 +5,11 @@ from src.state import State
 from handlers.authentication.auth_flow import is_session_valid
 from helpers.check_path import check_path
 from views.template import Template
-from views.configuration_db import ConfigurationDBView
-from views.configuration_master import MasterUserRegistration
-from views.configuration_first_login import ConfigurationFirstLoginView
+from views.configuration.configuration_db import ConfigurationDBView
+from views.configuration.configuration_master import MasterUserRegistration
+from views.configuration.configuration_first_login import ConfigurationFirstLoginView
+from views.configuration.configure_secret_manager import ConfigurationSecretManagerView
+from views.configuration.configuration_email import ConfigurationEmailView
 from views.assets import AssetsView
 from views.blocks import BlocksView
 from views.dashboard import DashboardView
@@ -56,9 +58,11 @@ def main(page: ft.Page):
         "/3": ("Assessments", AssessmentsView),
         "/4": ("Vulnerability", VulnerabilitiesView),
         "/5": ("Settings", ConfigurationFirstLoginView),
-        "/100": ("Configuration", ConfigurationDBView),
-        "/200": ("Registration Master User", MasterUserRegistration),
-        "/300": ("Login", LoginView),
+        "/100": ("Configuration Secret Manager", ConfigurationSecretManagerView),
+        "/101": ("Configuration DB Server", ConfigurationDBView),
+        "/102": ("Registration Master User", MasterUserRegistration),
+        "/103": ("Configuration SMTP Server", ConfigurationEmailView),
+        "/104": ("Login", LoginView),
         "/401": ("Unauthorized", UnauthorizedView),
     }
 
@@ -78,7 +82,7 @@ def main(page: ft.Page):
 
         # 2) display logic
         page.views.clear()
-        if route in ["/100", "/200", "/300", "/401"]:  # Skip template is if not logged user
+        if route in ["/100", "/101", "/102", "/103", "/104", "/401"]:  # Skip template is if not logged user
             page.views.append(
                 ft.View(
                     route=route,
@@ -104,12 +108,16 @@ def main(page: ft.Page):
     else:
         with open(config_file_path, "r") as f:
             conf_data = json.load(f)
-            if conf_data["step"] == "1":
-                page.go("/200")
+            if conf_data["step"] == "Step1":
+                page.go("/101")
+            elif conf_data["step"] == "Step2":
+                page.go("/102")
+            elif conf_data["step"] == "Step3":
+                page.go("/103")
             elif is_session_valid(state):
                 page.go("/")
             else:
-                page.go("/300")
+                page.go("/104")
 
 
 if __name__ == "__main__":

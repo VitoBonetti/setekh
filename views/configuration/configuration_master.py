@@ -12,7 +12,7 @@ class MasterUserRegistration:
             expand=True,
             spacing=10,
             controls=[
-                ft.Text(self.state.current_view_title, theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM)
+                ft.Text(f"STEP 3 - {self.state.current_view_title}", theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM)
             ]
         )
 
