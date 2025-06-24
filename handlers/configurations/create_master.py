@@ -35,7 +35,13 @@ def register_master(email, password1, password2, state, e):
     twofa_secret = pyotp.random_base32()
     hashed_password = hash_password(password1)
 
-    conn = connect_to_db(state)
+    if not state.session_db:
+        print("NO conn yet")
+        conn = connect_to_db(state)
+        state.session_db = conn
+    else:
+        print("FOUND conn")
+        conn = state.session_db
     cursor = conn.cursor()
 
     try:
@@ -60,9 +66,9 @@ def register_master(email, password1, password2, state, e):
         state.step2_info_text.value = str(e)
         state.step2_info_progress.visible = False
         state.page.update()
-    finally:
-        cursor.close()
-        conn.close()
+    # finally:
+    #     cursor.close()
+    #     conn.close()
 
 
 def verify_code(state, e):
@@ -73,7 +79,13 @@ def verify_code(state, e):
         return
 
     try:
-        conn = connect_to_db(state)
+        if not state.session_db:
+            print("NO conn yet")
+            conn = connect_to_db(state)
+            state.session_db = conn
+        else:
+            print("FOUND conn")
+            conn = state.session_db
         cursor = conn.cursor()
 
         # Fetch latest user's 2FA secret (assuming you're registering just 1 user here)
@@ -98,7 +110,7 @@ def verify_code(state, e):
             state.verify_code_text_field.visible = False
             state.qr_code_image_control.visible = False
 
-            config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'config.json'))
+            config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.conf'))
             try:
                 with open(config_file_path) as config_file:
                     config_data = json.load(config_file)
@@ -127,8 +139,8 @@ def verify_code(state, e):
         state.step2_info_text.value = f"Error verifying code: {ex}"
         state.page.update()
         return
-    finally:
-        cursor.close()
-        conn.close()
+    # finally:
+    #     cursor.close()
+    #     conn.close()
 
     state.page.go("/103")

@@ -14,3 +14,4 @@ class State:
         self.current_role = None
         self.session_id = None
         self.session_user_uuid = None
+        self.session_db = None

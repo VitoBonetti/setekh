@@ -10,5 +10,5 @@ def execute_query(conn):
             print('Query executed successfully')
         except Exception as e:
             print(e)
-    cursor.close()
-    conn.close()
+    # cursor.close()
+    # conn.close()

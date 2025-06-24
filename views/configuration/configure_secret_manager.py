@@ -17,7 +17,8 @@ class ConfigurationSecretManagerView:
 
         secret_host_text_field = ft.TextField(expand=True, label="Host", border_radius=5, bgcolor=ft.Colors.SURFACE)
         secret_port_text_field = ft.TextField(expand=True, label="Port", border_radius=5, bgcolor=ft.Colors.SURFACE)
-        secret_token_text_field = ft.TextField(expand=True, label="Token", password=True, can_reveal_password=True, border_radius=5, bgcolor=ft.Colors.SURFACE)
+        secret_role_id_text_field = ft.TextField(expand=True, label="Role ID", border_radius=5, bgcolor=ft.Colors.SURFACE)
+        secret_secret_id_text_field = ft.TextField(expand=True, label="Secret ID", password=True, can_reveal_password=True, border_radius=5, bgcolor=ft.Colors.SURFACE)
         secret_info_text = ft.Text("", style=ft.TextThemeStyle.BODY_MEDIUM, weight=ft.FontWeight.BOLD)
         self.state.secret_info_text = secret_info_text
 
@@ -35,7 +36,8 @@ class ConfigurationSecretManagerView:
                     controls=[
                         secret_host_text_field,
                         secret_port_text_field,
-                        secret_token_text_field,
+                        secret_role_id_text_field,
+                        secret_secret_id_text_field,
                         ft.Row([
                             ft.Container(expand=True),
                             ft.OutlinedButton(
@@ -47,7 +49,7 @@ class ConfigurationSecretManagerView:
                                         ft.ControlState.DEFAULT: ft.Colors.SURFACE
                                     }
                                 ),
-                                on_click=lambda e: sm_config(self.state, secret_host_text_field.value, secret_port_text_field.value, secret_token_text_field.value, "Step1", e),
+                                on_click=lambda e: sm_config(self.state, secret_host_text_field.value, secret_port_text_field.value, secret_role_id_text_field.value, secret_secret_id_text_field.value, "Step1", e),
                             ),
                             ft.OutlinedButton(
                                 text="Clear",

@@ -22,6 +22,7 @@ def db_config(state, host, port, user, password, db, step, e):
         print("Try to connect")
         conn = pymysql.connect(host=host, port=port, user=user, password=password, database=db)
         if conn:
+            state.session_db = conn
             client, secret_path = sm_handler_connection(state)
             client.secrets.kv.v2.create_or_update_secret(
                 path=f"{secret_path}/database",
@@ -38,7 +39,7 @@ def db_config(state, host, port, user, password, db, step, e):
             state.conf_info_text.value = "Connection successful."
             state.conf_info_text.update()
 
-            config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'config.json'))
+            config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.conf'))
             with open(config_file_path) as config_file:
                 json_config = json.load(config_file)
 

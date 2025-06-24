@@ -3,7 +3,7 @@ import bcrypt
 import pyotp
 from datetime import datetime, timedelta
 from utils.handle_db_connection import connect_to_db
-from queries.queries import UPDATE_SESSION, CHECK_SESSION, DELETE_SESSION
+from queries.queries import UPDATE_SESSION, CHECK_SESSION, DELETE_SESSION, LOGIN
 
 SESSIONS = {}
 SESSION_DURATION_MINUTES = 60
@@ -11,12 +11,19 @@ SESSION_DURATION_MINUTES = 60
 
 def login(email, password, state, e):
     try:
-        conn = connect_to_db(state)
+        if not state.session_db:
+            print("NO conn yet")
+            conn = connect_to_db(state)
+            state.session_db = conn
+        else:
+            print("FOUND conn")
+            conn = state.session_db
+
         cursor = conn.cursor()
-        cursor.execute("SELECT uuid, password, is_active, is_master, 2fa_secret FROM users WHERE email = %s", (email,))
+        cursor.execute(LOGIN, (email,))
         user_profile = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        # cursor.close()
+        # conn.close()
 
         if not user_profile:
             state.login_info_text.value = "Invalid credentials."
@@ -84,12 +91,19 @@ def create_session(state):
     state.session_user_uuid = state.temp_user_id
     expires_at = datetime.now() + timedelta(minutes=SESSION_DURATION_MINUTES)
     try:
-        conn = connect_to_db(state)
+        if not state.session_db:
+            print("NO conn yet")
+            conn = connect_to_db(state)
+            state.session_db = conn
+        else:
+            print("FOUND conn")
+            conn = state.session_db
+
         cursor = conn.cursor()
         cursor.execute(UPDATE_SESSION, (session_id, expires_at, state.temp_user_id))
         conn.commit()
-        cursor.close()
-        conn.close()
+        # cursor.close()
+        # conn.close()
         return session_id
     except Exception as e:
         print(f"create_session: {e}")
@@ -101,38 +115,58 @@ def is_session_valid(state):
     if not state.session_id or not state.session_user_uuid:
         return False
     try:
-        conn = connect_to_db(state)
+        if not state.session_db:
+            print("NO conn yet")
+            conn = connect_to_db(state)
+            state.session_db = conn
+        else:
+            print("FOUND conn")
+            conn = state.session_db
+
         cursor = conn.cursor()
         cursor.execute(CHECK_SESSION, (state.session_user_uuid, state.session_id))
+
         row = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        if not row:
+            # cursor.close()
+            # conn.close()
+            return False
+
+        if row[1]:
+            state.current_role = "Master"
+            expires_at = row[0]
+            if expires_at > datetime.now():
+                # cursor.close()
+                # conn.close()
+                return True
+            else:
+                # cursor.close()
+                # conn.close()
+                return False
     except Exception as e:
         print(f"is_session_valid: {e}")
         return False
 
-    if not row:
-        return False
 
-    if row[1]:
-        state.current_role = "Master"
-
-    expires_at = row[0]
-    if expires_at > datetime.now():
-        return True
-    else:
-        return False
 
 
 def logout(state, e):
     print("logout called")
     try:
-        conn = connect_to_db(state)
+        if not state.session_db:
+            print("NO conn yet")
+            conn = connect_to_db(state)
+            state.session_db = conn
+        else:
+            print("FOUND conn")
+            conn = state.session_db
+
         cursor = conn.cursor()
         cursor.execute(DELETE_SESSION, (state.session_user_uuid,))
         conn.commit()
         cursor.close()
         conn.close()
+        state.session_db = None
     except Exception as e:
         print(f"logout: {e}")
     state.session_id = None

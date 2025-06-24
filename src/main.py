@@ -43,7 +43,7 @@ def main(page: ft.Page):
     # one rendered inner‐view control per route
     state.view_contents = {}
 
-    config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'config.json'))
+    config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.conf'))
 
     # *** ONLY ONE TemplatePage FOR ALL ROUTES ***
     # we’ll swap out its content_view + selected_index on each nav

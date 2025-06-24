@@ -36,7 +36,7 @@ def configure_smtp(state, smtp, port, email, password, step, e):
         state.smtp_info_text.value = "Connection Established."
         state.smtp_info_text.update()
 
-        config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'config.json'))
+        config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.conf'))
         with open(config_file_path) as config_file:
             json_config = json.load(config_file)
 

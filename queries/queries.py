@@ -34,7 +34,25 @@ INITIAL_CONFIG_TABLE = ("INSERT INTO initialconfig (uuid, secret, initialdb, mas
                  "VALUES (%s, TRUE, TRUE, TRUE)")
 SELECT_CONFIG_UUID = "SELECT uuid FROM initialconfig LIMIT 1"
 UPDATE_INITIAL_CONFIG = "UPDATE initialconfig SET email = TRUE WHERE uuid = %s"
+UPDATE_INITIAL_CONFIG_BIS = "UPDATE initialconfig SET deploydb = TRUE WHERE uuid = %s"
 
 # == USERS ==
+LOGIN = "SELECT uuid, password, is_active, is_master, 2fa_secret FROM users WHERE email = %s"
 LAST_2FA = "SELECT uuid, 2fa_secret FROM users ORDER BY created_at DESC LIMIT 1"
 USER_IS_ACTIVE = "UPDATE users SET is_active = TRUE WHERE uuid = %s"
+
+
+# == DEPLOYMENT QUERIES ==
+INSERT_ROLES = "INSERT INTO roles (uuid, roles) VALUES (%s, %s)"
+CREATE_MAP_USER_BLOCK_ROLE = ("CREATE TABLE user_block_roles (id INT AUTO_INCREMENT PRIMARY KEY, "
+                              "user_uuid CHAR(36) NOT NULL, block_uuid CHAR(36) NOT NULL, role_uuid CHAR(36) NOT NULL, "
+                              "FOREIGN KEY (user_uuid) REFERENCES users(uuid), "
+                              "FOREIGN KEY (block_uuid) REFERENCES blocks(uuid), "
+                              "FOREIGN KEY (role_uuid) REFERENCES roles(uuid), "
+                              "UNIQUE (user_uuid, block_uuid)) ENGINE=InnoDB;")
+
+
+# == MASTER DASHBOARD ==
+SELECT_INITIAL_CONFIG_TABLE = "SELECT * FROM initialconfig LIMIT 1;"
+COUNT_USER_ROLES = "SELECT r.roles AS role_name, COUNT(DISTINCT ubr.user_uuid) AS user_count_per_role FROM user_block_roles AS ubr JOIN roles AS r ON ubr.role_uuid = r.uuid GROUP BY  r.roles;"
+COUNT_USER_BLOCKS = "SELECT b.block AS block_name, COUNT(DISTINCT ubr.user_uuid) AS user_count_per_block FROM user_block_roles AS ubr JOIN blocks AS b ON ubr.block_uuid = b.uuid GROUP BY b.block;"
